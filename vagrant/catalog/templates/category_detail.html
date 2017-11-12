@@ -1,0 +1,8 @@
+{% extends "main.html" %}
+{% block content %}
+				{% for i in items %}
+				<p>{{ i.name }}</p>
+				<p>Description</p>
+				<p>{{ i.description }}</p>
+				{% endfor %}
+{% endblock %}

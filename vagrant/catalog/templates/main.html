@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Shoe Catalog</title>
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+</head>
+<body>
+	<div class="container">
+		<h1><a href="{{url_for('homepage',)}}" style="text-decoration:none">Shoe Catalog</a></h1>
+		<div class="row">
+			<div class="col-2">
+				Category
+			</div>
+			<div class="col-8">
+				Detail
+			</div>
+			<div class="col-2">
+				Login
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-2">
+				{% for i in categories %}
+				<p>
+					<a href="{{url_for('show_one_category', category_id=i.id,)}}">{{ i.name }}</a>
+				</p>
+				{% endfor %}
+			</div>
+			<div class="col-8">
+				{% block content %}
+				{% endblock %}
+			</div>
+			<div class="col-2">
+				holder
+			</div>
+	</div>
+</body>
+</html>
