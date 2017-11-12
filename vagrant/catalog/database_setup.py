@@ -59,7 +59,7 @@ class Items(Base):
 # connects to local files, the URL format is slightly different. The 'file' 
 # portion of the URL is the filename of the database. For a relative file path, 
 # this requires three slashes:
-engine = create_engine('sqlite:///shoecatalog4.db')
+engine = create_engine('sqlite:///shoecatalog.db')
 
 # we have defined some Table objects and their metadata above, now it is the 
 # time to create the database with the metadata we set earlier

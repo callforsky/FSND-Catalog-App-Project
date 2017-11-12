@@ -23,7 +23,7 @@ CLIENT_ID = json.loads(
 APPLICATION_NAME = "Shoe Catalog"
 
 # we now connect to the database
-engine = create_engine('sqlite:///shoecatalog4.db')
+engine = create_engine('sqlite:///shoecatalog.db')
 Base.metadata.bind = engine
 
 # we now create the session to control the database
@@ -188,20 +188,33 @@ def gdisconnect():
 @app.route('/')
 @app.route('/shoecatalog/')
 def homepage():
-	categories = session.query(Category)
+	categories = session.query(Category).distinct()
 	items = session.query(Items)
 	return render_template('homepage.html', categories=categories, items=items)
 
 # Create a function to show the detail for a specific Category
 @app.route('/shoecatalog/<int:category_id>/')
 def show_one_category(category_id):
-	categories = session.query(Category)
+	categories = session.query(Category).distinct()
 	items = session.query(Items).filter_by(category_id=category_id).all()
 	return render_template('category_detail.html', categories=categories, items=items)
 
+# Create a function to allow the user to create a new shoe category
+@app.route('/shoecatalog/new/', methods=['GET','POST'])
+def new_shoe_category():
+	categories = session.query(Category).distinct()
+	if request.method == 'POST':
+		new_shoe_category = Category(name=request.form['name'])
+		session.add(new_shoe_category)
+		flash('New shoe category %s is created successfully!' % new_shoe_category.name)
+		session.commit()
+		return redirect(url_for('homepage'))
+	else:
+		return render_template('new_shoe_category.html', categories=categories)
+
 # Now create a function to edit the items detail the database
-@app.route('/shoecatalog/hold')
-def edit_item():
+@app.route('/shoecatalog/<int:category_id>/edit', methods=['GET', 'POST'])
+def edit_item(category_id):
 	pass
 
 # Create a new shoe category
