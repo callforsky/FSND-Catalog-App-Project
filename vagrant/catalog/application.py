@@ -227,7 +227,18 @@ def edit_shoe_category(category_id):
 		return render_template('edit_shoe_category.html', categories=shoe_category_to_be_edit, items=items)
 
 # Create a function to allow the user to delete the existing category
-
+@app.route('/shoecatalog/<int:category_id>/delete', methods=['GET', 'POST'])
+def delete_category(category_id):
+	categories = session.query(Category).distinct()
+	items = session.query(Items)
+	category_to_delete = session.query(Category).filter_by(id=category_id).one()
+	if request.method == 'POST':
+		session.delete(category_to_delete)
+		flash('%s is deleted successfully' % category_to_delete.name)
+		session.commit()
+		return redirect(url_for('homepage', categoreis=categories, items=items))
+	else:
+		return render_template('delete_category.html', categories=categories, items=items)
 
 
 # Now create a function to edit the items detail the database
