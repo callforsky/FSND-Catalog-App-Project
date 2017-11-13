@@ -196,7 +196,7 @@ def homepage():
 @app.route('/shoecatalog/<int:category_id>/')
 def show_one_category(category_id):
 	categories = session.query(Category).distinct()
-	items = session.query(Items).filter_by(category_id=category_id).all()
+	items = session.query(Items).filter_by(category_id=category_id).distinct()
 	return render_template('category_detail.html', categories=categories, items=items)
 
 # Create a function to allow the user to create a new shoe category
@@ -212,21 +212,45 @@ def new_shoe_category():
 	else:
 		return render_template('new_shoe_category.html', categories=categories)
 
-# Now create a function to edit the items detail the database
+# Create a function to allow the user to edit the existing category
 @app.route('/shoecatalog/<int:category_id>/edit', methods=['GET', 'POST'])
-def edit_item(category_id):
-	pass
+def edit_shoe_category(category_id):
+	categories = session.query(Category).distinct()
+	items = session.query(Items)
+	shoe_category_to_be_edit = session.query(Category).filter_by(id=category_id).first()
+	if request.method == 'POST':
+		if request.form['name']:
+			shoe_category_to_be_edit.name = request.form['name']
+			flash('You successfully edited %s' % shoe_category_to_be_edit.name)
+			return redirect(url_for('homepage'))
+	else:
+		return render_template('edit_shoe_category.html', categories=shoe_category_to_be_edit, items=items)
 
-# Create a new shoe category
-# @app.route('/shoecatalog/new/', methods=['GET', 'POST'])
-# def new_shoe_category():
-# 	if request.method == 'POST':
-# 		new_shoe_category = Category(name=request.form['category_name'])
+# Create a function to allow the user to delete the existing category
 
 
 
+# Now create a function to edit the items detail the database
+@app.route('/shoecatalog/<int:category_id>/<path:name>/edit', methods=['GET', 'POST'])
+def edit_item(category_id, name):
+	categories = session.query(Category).distinct()
+	items = session.query(Items)
+	editedItem = session.query(Items).filter_by(name=name)
+	if request.method == 'POST':
+		if request.form['name']:
+			editedItem.name = request.form['name']
+		if request.form['description']:
+			editedItem.description = request.form['description']
+		session.add(editedItem)
+		session.commit()
+		flash('Item Successfully Edited')
+		return redirect(url_for('homepage', categories=categories, items=items))
+	else:
+		return render_template('edit_shoe_detail.html', categories=categories, items=editedItem)
 
-# this part is used for
+
+
+# this part is used for all Python programs
 if __name__ == '__main__':
 	app.secret_key = 'udacity'
 	app.debug = True
