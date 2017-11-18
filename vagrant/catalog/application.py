@@ -103,6 +103,7 @@ def gconnect():
 	# Verify that the access token is used for the intended user.
 	gplus_id = credentials.id_token['sub']
 	if result['user_id'] != gplus_id:
+		print categories
 		response = make_response(
 			json.dumps("Token's user ID doesn't match given user ID."), 401)
 		response.headers['Content-Type'] = 'application/json'
@@ -189,15 +190,16 @@ def gdisconnect():
 @app.route('/shoecatalog/')
 def homepage():
 	categories = session.query(Category).distinct()
-	items = session.query(Items)
+	items = session.query(Items).distinct()
 	return render_template('homepage.html', categories=categories, items=items)
 
 # Create a function to show the detail for a specific Category
 @app.route('/shoecatalog/<int:category_id>/')
 def show_one_category(category_id):
 	categories = session.query(Category).distinct()
+	displayedCategory = session.query(Category).filter_by(id=category_id).first()
 	items = session.query(Items).filter_by(category_id=category_id).distinct()
-	return render_template('category_detail.html', categories=categories, items=items)
+	return render_template('category_detail.html', categories=categories, items=items, category=displayedCategory)
 
 # Create a function to allow the user to create a new shoe category
 @app.route('/shoecatalog/new/', methods=['GET','POST'])
@@ -216,37 +218,41 @@ def new_shoe_category():
 @app.route('/shoecatalog/<int:category_id>/edit', methods=['GET', 'POST'])
 def edit_shoe_category(category_id):
 	categories = session.query(Category).distinct()
-	items = session.query(Items)
-	shoe_category_to_be_edit = session.query(Category).filter_by(id=category_id).first()
+	# somehow the first() function is important to grant the attribute to editedCategory
+	editedCategory = session.query(Category).filter_by(id=category_id).first()
 	if request.method == 'POST':
+		# if the name from the form is not empty, then...
 		if request.form['name']:
-			shoe_category_to_be_edit.name = request.form['name']
-			flash('You successfully edited %s' % shoe_category_to_be_edit.name)
+			editedCategory.name = request.form['name']
+			flash('You successfully edited %s' % editedCategory.name)
 			return redirect(url_for('homepage'))
 	else:
-		return render_template('edit_shoe_category.html', categories=shoe_category_to_be_edit, items=items)
+		# create the form page where the user can edit an existing cateogory
+		# in render_template, the categories=categories, the first one will be sent to the template
+		# the second one is from the variable above
+		return render_template('edit_shoe_category.html', categories=categories, editedCategory=editedCategory)
 
 # Create a function to allow the user to delete the existing category
 @app.route('/shoecatalog/<int:category_id>/delete', methods=['GET', 'POST'])
 def delete_category(category_id):
 	categories = session.query(Category).distinct()
 	items = session.query(Items)
-	category_to_delete = session.query(Category).filter_by(id=category_id).one()
+	deletedCategory = session.query(Category).filter_by(id=category_id).first()
 	if request.method == 'POST':
-		session.delete(category_to_delete)
-		flash('%s is deleted successfully' % category_to_delete.name)
+		session.delete(deletedCategory)
+		flash('%s is deleted successfully' % deletedCategory.name)
 		session.commit()
-		return redirect(url_for('homepage', categoreis=categories, items=items))
+		return redirect(url_for('homepage'))
 	else:
-		return render_template('delete_category.html', categories=categories, items=items)
+		return render_template('delete_category.html', categories=categories, items=items, deletedCategory=deletedCategory)
 
 
-# Now create a function to edit the items detail the database
-@app.route('/shoecatalog/<int:category_id>/<path:name>/edit', methods=['GET', 'POST'])
-def edit_item(category_id, name):
+# create a function to edit the item in the database
+@app.route('/shoecatalog/<int:category_id>/<int:item_id>/edit', methods=['GET', 'POST'])
+def edit_item(category_id, item_id):
 	categories = session.query(Category).distinct()
-	items = session.query(Items)
-	editedItem = session.query(Items).filter_by(name=name)
+	specificCategory = session.query(Category).filter_by(id=category_id).first()
+	editedItem = session.query(Items).filter_by(id=item_id).first()
 	if request.method == 'POST':
 		if request.form['name']:
 			editedItem.name = request.form['name']
@@ -255,11 +261,37 @@ def edit_item(category_id, name):
 		session.add(editedItem)
 		session.commit()
 		flash('Item Successfully Edited')
-		return redirect(url_for('homepage', categories=categories, items=items))
+		return redirect(url_for('homepage'))
 	else:
-		return render_template('edit_shoe_detail.html', categories=categories, items=editedItem)
+		return render_template('edit_shoe_detail.html', categories=categories, editedItem=editedItem, specificCategory=specificCategory)
 
+# create a function to delete the item in the database
+@app.route('/shoecatalog/<int:category_id>/<int:item_id>/delete', methods=['GET', 'POST'])
+def delete_item(category_id, item_id):
+	categories = session.query(Category).distinct()
+	specificCategory = session.query(Category).filter_by(id=category_id).first()
+	deletedItem = session.query(Items).filter_by(id=item_id).first()
+	if request.method == 'POST':
+		session.delete(deletedItem)
+		flash('%s is deleted successfully' % deletedItem.name)
+		session.commit()
+		return redirect(url_for('homepage'))
+	else:
+		return render_template('delete_shoe_detail.html', categories=categories, specificCategory=specificCategory, deletedItem=deletedItem)
 
+# create a function to create a new item in the database
+@app.route('/shoecatalog/<int:category_id>/new', methods = ['GET', 'POST'])
+def new_item(category_id):
+	categories = session.query(Category).distinct()
+	specificCategory = session.query(Category).filter_by(id=category_id).first()
+	if request.method == 'POST':
+		newItem = Items(name=request.form['name'], description=request.form['description'], category_id=category_id)
+		session.add(newItem)
+		flash('New shoe item %s is created successfully!' % newItem.name)
+		session.commit()
+		return redirect(url_for('homepage'))
+	else:
+		return render_template('new_shoe_item.html', categories=categories, specificCategory=specificCategory)
 
 # this part is used for all Python programs
 if __name__ == '__main__':
