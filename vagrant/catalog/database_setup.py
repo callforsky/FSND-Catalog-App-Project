@@ -1,6 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy import create_engine
 from passlib.apps import custom_app_context as pwd_context
 import random, string
@@ -32,6 +32,9 @@ class Category(Base):
 	id = Column(Integer, primary_key=True)
 	# the name of the categories
 	name = Column(String(250), nullable=False)
+	# link to Item table on Delete Cascade
+	# Category won't be deleted unless all of its items are deleted
+	# items = relationship("Items", cascade="all, delete-orphan" backref=backef"category")
 
 	@property
 	def serialize(self):
@@ -50,7 +53,7 @@ class Items(Base):
 	name = Column(String(250), nullable=False)
 	description = Column(String(250), nullable=False)
 	category_id = Column(Integer, ForeignKey('category.id'))
-	category = relationship(Category)
+	category = relationship("Category", backref=backref("item", cascade="all, delete-orphan"))
 
 
 	# a good tutorial on property(): https://goo.gl/uQzyjq
