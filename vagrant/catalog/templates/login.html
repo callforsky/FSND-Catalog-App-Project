@@ -7,19 +7,20 @@
 </head>
 
 <body>
-
-<div id="signInButton">
-	<span class="g-signin"
-	 data-scrope="openid email"
-	 data-clientid="926765787859-9b0voh1g3kqm99vqe1lcusbaj0o32o7q.apps.googleusercontent.com"
-	 data-redirecturi="postmessage"
-	 data-accesstype="offline"
-	 data-cookiepolicy="single_host_origin"
-	 data-callback="signInCallback"
-	 data-approvalprompt="force">
-	</span>
-</div>
-<div id="result"></div>
+<h2>Shoe Catalog Login Page</h2>
+<p>Shoe Catalog offers a secure third-party authentication that uses Google's Oauth 2.0 service. You will have to obtain a Google account to use this application. This application does not offer a self-signed function to protect users' privacy. Please click the Google Sign-in Button to continue your discovery.</p>
+  <div id="signInButton">
+  	<span class="g-signin"
+  	 data-scrope="openid email"
+  	 data-clientid="926765787859-9b0voh1g3kqm99vqe1lcusbaj0o32o7q.apps.googleusercontent.com"
+  	 data-redirecturi="postmessage"
+  	 data-accesstype="offline"
+  	 data-cookiepolicy="single_host_origin"
+  	 data-callback="signInCallback"
+  	 data-approvalprompt="force">
+  	</span>
+  </div>
+  <div id="result"></div>
 
 <script>
 function signInCallback(authResult) {
@@ -36,7 +37,7 @@ function signInCallback(authResult) {
       success: function(result) {
         // Handle or verify the server response if necessary.
         if (result) {
-          $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
+          $('#result').html('Login Successful!</br>' + '</br>Redirecting...')
          setTimeout(function() {
           window.location.href = "/shoecatalog";
          }, 4000);
