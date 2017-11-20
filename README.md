@@ -1,5 +1,5 @@
 # Shoe Catalog Web Application - A Udacity FSND Nanodegree Project
-======
+---
 
 ### Background
 This project provides a list of shoe items within a variety of categories as well as provide a user registration and authentication system. Authorized users will have the ability to post, edit and delete the categories or items. This application is built with Flask and Bootstrap, thereby offering API Endpoints for the users to perform CRUD operations.
