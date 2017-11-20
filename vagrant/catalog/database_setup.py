@@ -2,6 +2,9 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
+from passlib.apps import custom_app_context as pwd_context
+import random, string
+from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
 
 # declarative_base() callable returns a new base class from which all mapped 
 # classes should inherit. It takes a pre-configured class of database from 
@@ -9,9 +12,41 @@ from sqlalchemy import create_engine
 # The declarative_base() base class contains a MetaData object where newly 
 # defined Table objects are collected.
 Base = declarative_base()
+secret_key = ''.join(random.choice(string.ascii_uppercase+string.digits) for x in xrange(32))
 
-# going to create 2 tables, one is the category, another is the items under 
-# each category. Below we create the metadata for these 2 tables
+# going to create 3 tables, one is the category, another is the items under 
+# each category. Last one is the user info table 
+# Below we create the metadata for these 2 tables
+
+class User(Base):
+	__tablename__ = 'user'
+	id = Column(Integer, primary_key=True)
+	username = Column(String(32), index=True)
+	password_hash = Column(String(64))
+
+	def hash_password(self, password):
+		self.password_has = pwd_context.encrypt(password)
+
+	def verify_password(self, password):
+		return pwd_context.verify(password, self.password_hash)
+	
+	def generate_auth_token(self, expiration=600):
+		s = Serializer(secret_key, expires_in = expiration)
+		return s.dumps({'id':self.id})
+
+	@staticmethod
+	def verify_auth_token(token):
+		s = Serializer(secret_key)
+		try:
+			data = s.loads(token)
+		except SignatureExpired:
+			# Valid Token, but expired
+			return None
+		except BadSignature:
+			# Invalid Token
+			return None
+		user_id = data['id']
+		return user_id
 
 # create the category table
 class Category(Base):

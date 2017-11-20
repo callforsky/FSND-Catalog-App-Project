@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, jsonify, url_for, flash
+from flask import Flask, render_template, request, redirect, jsonify, url_for, flash, g
 from flask import session as login_session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -10,6 +10,9 @@ import httplib2
 import json
 from flask import make_response
 import requests
+from flask_httpauth import HTTPBasicAuth
+
+auth = HTTPBasicAuth()
 
 # create an instance of this class. The first argument is the name of the 
 # application's module or package. If you are using a single module, you should 
@@ -17,6 +20,20 @@ import requests
 # as module the name will be different ('__main__' versus the actual import 
 # name)
 app = Flask(__name__)
+
+@auth.verify_password
+def verify_password(username_or_token, password):
+	# Try to see if it's a token at first
+	user_id = User.verify_auth_token(username_or_token)
+	if user_id:
+		user = session.query(User).filter_by(id = user_id).first()
+	else:
+		user = session.query(User).filter_by(username = username_or_token).first()
+		if not user or not user.verify_password(password):
+			return False
+	g.user = user
+	return True
+
 
 CLIENT_ID = json.loads(
 	open('client_secrets.json', 'r').read())['web']['client_id']
@@ -38,7 +55,7 @@ session = DBSession()
 # this unique session token is randomized and given to the user 
 # the user will have this unique state token as long as they have the same 
 # login page open
-def login_page():
+def login():
 	state = ''.join(random.choice(string.ascii_uppercase + string.digits)
 					for x in xrange(32))
 	# Unlike a Cookie, Flask Session data is stored on server. Session is the 
@@ -138,7 +155,6 @@ def gconnect():
 
 	login_session['username'] = data['name']
 	login_session['picture'] = data['picture']
-	login_session['email'] = data['email']
 
 	output = ''
 	output += '<h1>Welcome, '
@@ -175,7 +191,7 @@ def gdisconnect():
 		del login_session['access_token']
 		del login_session['gplus_id']
 		del login_session['username']
-		del login_session['email']
+		# del login_session['email']
 		del login_session['picture']
 		response = make_response(json.dumps('Successfully disconnected.'), 200)
 		response.headers['Content-Type'] = 'application/json'
@@ -203,6 +219,7 @@ def show_one_category(category_id):
 
 # Create a function to allow the user to create a new shoe category
 @app.route('/shoecatalog/new/', methods=['GET','POST'])
+@auth.login_required
 def new_shoe_category():
 	categories = session.query(Category).distinct()
 	if request.method == 'POST':
@@ -225,7 +242,7 @@ def edit_shoe_category(category_id):
 		if request.form['name']:
 			editedCategory.name = request.form['name']
 			flash('You successfully edited %s' % editedCategory.name)
-			return redirect(url_for('homepage'))
+			return redirect(url_for('show_one_category', category_id=editedCategory.id))
 	else:
 		# create the form page where the user can edit an existing cateogory
 		# in render_template, the categories=categories, the first one will be sent to the template
@@ -261,7 +278,7 @@ def edit_item(category_id, item_id):
 		session.add(editedItem)
 		session.commit()
 		flash('Item Successfully Edited')
-		return redirect(url_for('homepage'))
+		return redirect(url_for('show_one_category', category_id=specificCategory.id))
 	else:
 		return render_template('edit_shoe_detail.html', categories=categories, editedItem=editedItem, specificCategory=specificCategory)
 
@@ -275,7 +292,7 @@ def delete_item(category_id, item_id):
 		session.delete(deletedItem)
 		flash('%s is deleted successfully' % deletedItem.name)
 		session.commit()
-		return redirect(url_for('homepage'))
+		return redirect(url_for('show_one_category', category_id=specificCategory.id))
 	else:
 		return render_template('delete_shoe_detail.html', categories=categories, specificCategory=specificCategory, deletedItem=deletedItem)
 
@@ -289,7 +306,7 @@ def new_item(category_id):
 		session.add(newItem)
 		flash('New shoe item %s is created successfully!' % newItem.name)
 		session.commit()
-		return redirect(url_for('homepage'))
+		return redirect(url_for('show_one_category', category_id=specificCategory.id))
 	else:
 		return render_template('new_shoe_item.html', categories=categories, specificCategory=specificCategory)
 

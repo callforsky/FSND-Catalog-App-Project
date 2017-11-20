@@ -9,8 +9,6 @@
 	<!-- Bootstrap CSS -->
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 
-	<!-- Link to my personal CSS -->
-	<link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 <body>
 	<div class="container">
@@ -23,7 +21,15 @@
 				Detail
 			</div>
 			<div class="col-2">
-				Login
+				{% if 'username' not in session %}
+				<a href="{{url_for('login')}}">
+					<button type="button" class="btn btn-primary">Login</button>
+				</a>
+				{% else %}
+				<a href="{{url_for('gdisconnect')}}">
+					<button type="button" class="btn btn-primary">Logoff</button>
+				</a>
+				{% endif %}
 			</div>
 		</div>
 		<div class="row">
