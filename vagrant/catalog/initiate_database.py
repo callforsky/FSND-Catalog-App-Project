@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import json
 
 from database_setup import Category, Items, Base
 
@@ -80,6 +81,22 @@ shoe_detail_6 = Items(category = shoe_category_3,
 
 session.add(shoe_detail_6)
 session.commit()
+
+# Exploring a more efficient way to initiate the database
+# category_json = json.loads("""{
+#   "all_categories": [
+#     {
+#       "name": "Training",
+#     },
+#     {
+#       "name": "Kids",
+#     },
+
+#     {
+#       "name": "Fashion",
+#     }
+#   ]
+# }""")
 
 
 print "Catalog initiated!"
